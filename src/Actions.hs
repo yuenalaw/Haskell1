@@ -2,8 +2,11 @@ module Actions where
 
 import World
 
-actions :: String -> Maybe Action
-actions "go"      = Just go
+data Command' = go Direction | get Object 
+data Direction = North | South | East | West
+
+actions :: Command' -> Maybe Action
+actions go Direction  = Just go 
 actions "get"     = Just get
 actions "drop"    = Just put
 actions "pour"    = Just pour
@@ -16,6 +19,7 @@ commands :: String -> Maybe Command
 commands "quit"      = Just quit
 commands "inventory" = Just inv
 commands _           = Nothing
+
 
 {- Given a direction and a room to move from, return the room id in
    that direction, if it exists.
