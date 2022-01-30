@@ -2,11 +2,11 @@ module Actions where
 
 import World
 
-data Command' = go Direction | get Object 
+data Command' = Go Direction | Get Object
 data Direction = North | South | East | West
 
-actions :: Command' -> Maybe Action
-actions go Direction  = Just go 
+actions :: String -> Maybe Action
+actions "go"      = Just go 
 actions "get"     = Just get
 actions "drop"    = Just put
 actions "pour"    = Just pour
@@ -35,17 +35,25 @@ Nothing
 
 move :: String -> Room -> Maybe String
 move dir rm = undefined
+   {- check each of the exits in the room and if one matches the direction given return that exit
+      else returun Nothing
+   -}               
 
-{- Return True if the object appears in the room. -}
+{- PARTIALLY COMPLETED!! (rather than taking a String, change it to take an Object)
+Return True if the object appears in the room. -}
 
 objectHere :: String -> Room -> Bool
-objectHere o rm = undefined
+objectHere o rm = [object | object <- objects rm, obj_name object == o] /= []
+
+
 
 {- Given an object id and a room description, return a new room description
    without that object -}
 
-removeObject :: String -> Room -> Room
-removeObject o rm = undefined
+removeObject :: Object -> Room -> Room
+removeObject o rm = rm { objects = filter (== o) (objects rm) }
+{-the above was a trial, but it does not seem to be working-}
+
 
 {- Given an object and a room description, return a new room description
    with that object added -}
