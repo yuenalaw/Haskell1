@@ -51,7 +51,7 @@ objectHere o rm = [object | object <- objects rm, obj_name object == o] /= []
    without that object -}
 
 removeObject :: Object -> Room -> Room
-removeObject o rm = rm { objects = filter (== o) (objects rm) }
+removeObject o rm = rm { objects = filter (/= o) (objects rm) }
 {-the above was a trial, but it does not seem to be working-}
 
 
