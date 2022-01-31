@@ -2,8 +2,14 @@ module Actions where
 
 import World
 
-data Command' = Go Direction | Get Object
 data Direction = North | South | East | West
+
+{-
+data Command' = Go Direction | Get Object 
+               | Drop Object | Pour Object 
+               | Examine Object | Drink Object
+               | Open Object
+-}
 
 actions :: String -> Maybe Action
 actions "go"      = Just go 
@@ -14,6 +20,19 @@ actions "examine" = Just examine
 actions "drink"   = Just drink
 actions "open"    = Just open
 actions _         = Nothing
+
+parseObject :: String -> Maybe Object
+parseObject "mug"     = Just mug
+parseObject "coffee"  = Just coffeepot
+parseObject _         = Nothing 
+
+
+directions :: String -> Maybe Direction
+directions "north"   = Just North
+directions "south"   = Just South
+directions "east"    = Just East
+directions "west"    = Just West
+directions _         = Nothing
 
 commands :: String -> Maybe Command
 commands "quit"      = Just quit
