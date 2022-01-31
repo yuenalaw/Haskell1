@@ -46,7 +46,6 @@ objectHere :: String -> Room -> Bool
 objectHere o rm = [object | object <- objects rm, obj_name object == o] /= []
 
 
-
 {- Given an object id and a room description, return a new room description
    without that object -}
 
@@ -94,8 +93,8 @@ removeInv gd obj = undefined
 
 {- Does the inventory in the game state contain the given object? -}
 
-carrying :: GameData -> String -> Bool
-carrying gd obj = undefined
+carrying :: GameData -> Object -> Bool
+carrying gd obj = obj `elem` inventory gd
 
 {-
 Define the "go" action. Given a direction and a game state, update the game

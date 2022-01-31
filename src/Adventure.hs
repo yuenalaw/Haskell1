@@ -13,6 +13,14 @@ winmessage = "Congratulations, you have made it out of the house.\n" ++
 {- Given a game state, and user input (as a list of words) return a 
    new game state and a message for the user. -}
 
+{-rather than taking in list of strings take list of commands-}
+
+{-
+parseInput :: [String] -> Maybe Command
+parseInput ["go", d] = case parseDirection d of 
+                            Nothing -> Nothing
+                            Just dir -> Just dir
+-}
 process :: GameData -> [String] -> (GameData, String)
 process state [cmd,arg] = case actions cmd of
                             Just fn -> fn arg state
