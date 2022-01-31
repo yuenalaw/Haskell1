@@ -47,7 +47,6 @@ objectHere :: Object -> Room -> Bool
 objectHere o rm = o `elem` (objects rm)
 
 
-
 {- Given an object id and a room description, return a new room description
    without that object -}
 
@@ -67,13 +66,13 @@ addObject o rm = rm { objects = (objects rm) ++ [o]}
    checked with 'objectHere') -}
 
 findObj :: String -> [Object] -> Object
-findObj o ds = head (filter (\x -> o == (obj_desc x)) ds) 
+findObj o ds = head (filter (\x -> (obj_name x) == o) ds) 
 {-head is safe because we assume that the object is in the list -}
 
 {- Use 'findObj' to find an object in a room description -}
 
-objectData :: String -> Room -> Object
-objectData o rm = undefined
+objectData :: String -> Room -> Object {-WE SHOULD USE OBJECT HERE TO CHECK!! -}
+objectData o rm = findObj o (objects rm)
 
 {- Given a game state and a room id, replace the old room information with
    new data. If the room id does not already exist, add it. -}
@@ -85,8 +84,13 @@ updateRoom gd rmid rmdata = undefined
    room and add it to the player's inventory -}
 
 addInv :: GameData -> String -> GameData
-addInv gd obj = undefined
+addInv gd obj = let currRoom = getRoomData gd 
+                    wantedObj = objectData obj currRoom
+                in gd {inventory = (inventory gd) ++ [wantedObj]}
 
+-- addInv gd obj = do let roomObj = [y | (x,y) <- (world gd), x == (location_id gd)] --returns as [room]
+ 
+            
 {- Given a game state and an object id, remove the object from the
    inventory. Hint: use filter to check if something should still be in
    the inventory. -}
