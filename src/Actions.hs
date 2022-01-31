@@ -42,8 +42,9 @@ move dir rm = undefined
 {- PARTIALLY COMPLETED!! (rather than taking a String, change it to take an Object)
 Return True if the object appears in the room. -}
 
-objectHere :: String -> Room -> Bool
-objectHere o rm = [object | object <- objects rm, obj_name object == o] /= []
+objectHere :: Object -> Room -> Bool
+--objectHere o rm = [object | object <- objects rm, object == o] /= []
+objectHere o rm = o `elem` (objects rm)
 
 
 
@@ -59,14 +60,15 @@ removeObject o rm = rm { objects = filter (/= o) (objects rm) }
    with that object added -}
 
 addObject :: Object -> Room -> Room
-addObject o rm = undefined
+addObject o rm = rm { objects = (objects rm) ++ [o]}
 
 {- Given an object id and a list of objects, return the object data. Note
    that you can assume the object is in the list (i.e. that you have
    checked with 'objectHere') -}
 
 findObj :: String -> [Object] -> Object
-findObj o ds = undefined
+findObj o ds = head (filter (\x -> o == (obj_desc x)) ds) 
+{-head is safe because we assume that the object is in the list -}
 
 {- Use 'findObj' to find an object in a room description -}
 
