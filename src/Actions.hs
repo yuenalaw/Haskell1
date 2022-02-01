@@ -205,7 +205,8 @@ go dir state
 -}
 
 get :: Action
-get obj state = undefined
+get obj state = if objectHere obj then
+                  state { addInv  }
 
 {- Remove an item from the player's inventory, and put it in the current room.
    Similar to 'get' but in reverse - find the object in the inventory, create
@@ -220,7 +221,7 @@ put obj state = undefined
    inventory! -}
 
 examine :: Action
-examine obj state = undefined
+examine obj state = if objectHere then 
 
 {- Pour the coffee. Obviously, this should only work if the player is carrying
    both the pot and the mug. This should update the status of the "mug"
