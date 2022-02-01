@@ -1,15 +1,31 @@
 module Actions where
 
 import World
+import Parsing
 
 data Direction = North | South | East | West
+   deriving Show 
 
-{-
-data Command' = Go Direction | Get Object 
+data Object = Coffee 
+   deriving Show 
+
+data Command = Go Direction | Get Object 
                | Drop Object | Pour Object 
                | Examine Object | Drink Object
                | Open Object
--}
+   deriving Show 
+
+parseDirection :: Parser Direction
+parseDirection
+     = do string "north"
+          return North
+   ||| do string "south"
+          return South
+   ||| do string "east"
+          return East  
+   ||| do string "west"
+          return West  
+
 
 actions :: String -> Maybe Action
 actions "go"      = Just go 
@@ -53,10 +69,11 @@ Nothing
 -}
 
 move :: String -> Room -> Maybe String
-move dir rm = undefined
    {- check each of the exits in the room and if one matches the direction given return that exit
       else returun Nothing
-   -}               
+   -}
+move dir rm = if (res == []) then Nothing else Just $ room_desc (head res) 
+      where res = filter (\x -> dir == exit_dir x) exits rm
 
 {- PARTIALLY COMPLETED!! (rather than taking a String, change it to take an Object)
 Return True if the object appears in the room. -}
@@ -85,26 +102,42 @@ addObject o rm = rm { objects = (objects rm) ++ [o]}
    checked with 'objectHere') -}
 
 findObj :: String -> [Object] -> Object
-findObj o ds = head (filter (\x -> o == (obj_desc x)) ds) 
+findObj o ds = head (filter (\x -> (obj_name x) == o) ds) 
 {-head is safe because we assume that the object is in the list -}
 
 {- Use 'findObj' to find an object in a room description -}
 
-objectData :: String -> Room -> Object
-objectData o rm = undefined
+objectData :: String -> Room -> Object {-WE SHOULD USE OBJECT HERE TO CHECK!! -}
+objectData o rm = findObj o (objects rm)
 
 {- Given a game state and a room id, replace the old room information with
    new data. If the room id does not already exist, add it. -}
 
+findRoom :: GameData -> String -> Bool 
+findRoom gd rmid 
+  = do possibleRoom <- filter (\x -> fst x == rmid) world gd
+       if possibleRoom == []
+          then False 
+       else 
+          True
+
 updateRoom :: GameData -> String -> Room -> GameData
-updateRoom gd rmid rmdata = undefined
+updateRoom gd rmid rmdata 
+  = do hasRoom <- findRoom gd rmid 
+       if hasRoom
+          then gd {world=[if (x,y) == (rmid,_) then (rmid,rmdata) else (x,y)| (x,y) <- world gd]}
+       else 
+          gd {world=(world gd ++ (rmid,rmdata))}
+               
 
 {- Given a game state and an object id, find the object in the current
    room and add it to the player's inventory -}
 
 addInv :: GameData -> String -> GameData
-addInv gd obj = undefined
-
+addInv gd obj = let currRoom = getRoomData gd 
+                    wantedObj = objectData obj currRoom
+                in gd {inventory = (inventory gd) ++ [wantedObj]}
+            
 {- Given a game state and an object id, remove the object from the
    inventory. Hint: use filter to check if something should still be in
    the inventory. -}
@@ -130,7 +163,14 @@ e.g.
 -}
 
 go :: Action
-go dir state = undefined
+go dir state 
+  = do 
+       d <- parseDirection dir
+       currLoc <- getRoomData 
+       exitRoom <- move dir currLoc 
+       case exitRoom of
+         Just ans -> (state {location_id=ans},"OK")
+         Nothing -> (state,"Unable to move!")
 
 {- Remove an item from the current room, and put it in the player's inventory.
    This should only work if the object is in the current room. Use 'objectHere'
