@@ -6,7 +6,7 @@ import Parsing
 data Direction = North | South | East | West
    deriving Show 
 
-data Object' = Coffee | Door
+data Object' = Coffee | Door | Mug
    deriving Show 
 
 data Command' = Go Direction | Get Object' 
@@ -92,14 +92,13 @@ move :: String -> Room -> Maybe String
    {- check each of the exits in the room and if one matches the direction given return that exit
       else returun Nothing
    -}
-move dir rm = if (res == []) then Nothing else Just $ room_desc (head res) 
+move dir rm = if (res == []) then Nothing else Just $ exit_desc (head res) 
       where res = filter (\x -> dir == exit_dir x) (exits rm)
 
 {- PARTIALLY COMPLETED!! (rather than taking a String, change it to take an Object)
 Return True if the object appears in the room. -}
 
 objectHere :: Object -> Room -> Bool
---objectHere o rm = [object | object <- objects rm, object == o] /= []
 objectHere o rm = o `elem` (objects rm)
 
 
@@ -134,20 +133,10 @@ objectData o rm = findObj o (objects rm)
    new data. If the room id does not already exist, add it. -}
 
 findRoom :: GameData -> String -> Bool 
-findRoom gd rmid 
-  = do possibleRoom <- filter (\x -> fst x == rmid) world gd
-       if possibleRoom == []
-          then False 
-       else 
-          True
+findRoom gd rmid = if filter (\(x,y) -> x == rmid) (world gd) == [] then False else True 
 
 updateRoom :: GameData -> String -> Room -> GameData
-updateRoom gd rmid rmdata 
-  = do hasRoom <- findRoom gd rmid 
-       if hasRoom
-          then gd {world=[if (x,y) == (rmid,_) then (rmid,rmdata) else (x,y)| (x,y) <- world gd]}
-       else 
-          gd {world=(world gd ++ (rmid,rmdata))}
+updateRoom gd rmid rmdata = if findRoom gd rmid then gd {world=[if (x==rmid) then (rmid,rmdata) else (x,y)| (x,y) <- world gd]} else gd {world=(world gd ++ [(rmid,rmdata)])}
                
 
 {- Given a game state and an object id, find the object in the current
@@ -163,7 +152,7 @@ addInv gd obj = let currRoom = getRoomData gd
    the inventory. -}
 
 removeInv :: GameData -> String -> GameData
-removeInv gd obj = gd {inventory = filter (\x -> obj_name x == obj) inventory gd}
+removeInv gd obj = gd {inventory = filter (\x -> obj_name x == obj) (inventory gd)}
 
 {- Does the inventory in the game state contain the given object? -}
 
@@ -183,7 +172,7 @@ e.g.
 -}
 
 go :: Action
-go dir state = case move dir getRoomData of
+go dir state = case move dir (getRoomData state) of
    Just ans -> (state {location_id=ans},"OK")
    Nothing -> (state,"Unable to move!")
 
