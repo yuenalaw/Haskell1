@@ -6,13 +6,13 @@ import Parsing
 data Direction = North | South | East | West
    deriving Show 
 
-data Object = Coffee 
+data Object' = Coffee | Door
    deriving Show 
 
-data Command = Go Direction | Get Object 
-               | Drop Object | Pour Object 
-               | Examine Object | Drink Object
-               | Open Object
+data Command' = Go Direction | Get Object' 
+               | Drop Object' | Pour Object'
+               | Examine Object' | Drink Object'
+               | Open Object' 
    deriving Show 
 
 parseDirection :: Parser Direction
@@ -26,29 +26,49 @@ parseDirection
    ||| do string "west"
           return West  
 
+validate :: String -> String -> Maybe Command'
+validate "go" "north" = Just (Go North)
+validate "go" "south" = Just (Go South)
+validate "go" "east" = Just (Go East)
+validate "go" "west" = Just (Go West)
+validate "get" "mug" = Just (Get Mug)
+validate "get" "coffee" = Just (Get Coffee)
+validate "drop" "mug" = Just (Drop Mug)
+validate "drop" "coffee" = Just (Drop Coffee)
+validate "pour" "coffee" = Just (Pour Coffee)
+validate "examine" "mug" = Just (Examine Mug)
+validate "examine" "coffee" = Just (Examine Coffee)
+validate "drink" "coffee" = Just (Drink Coffee)
+validate "open" "door" = Just (Open Door)
+validate _ _ = Nothing
 
-actions :: String -> Maybe Action
-actions "go"      = Just go 
-actions "get"     = Just get
-actions "drop"    = Just put
-actions "pour"    = Just pour
-actions "examine" = Just examine
-actions "drink"   = Just drink
-actions "open"    = Just open
-actions _         = Nothing
+-- commandOther :: String -> Maybe Command 
+-- commandOther "quit" = Just quit 
+-- commandOther "inv" = Just inv
+-- commandOther _ = Nothing
 
-parseObject :: String -> Maybe Object
-parseObject "mug"     = Just mug
-parseObject "coffee"  = Just coffeepot
-parseObject _         = Nothing 
+-- actions :: String -> Maybe Action
+-- actions "go"      = Just go 
+-- actions "get"     = Just get
+-- actions "drop"    = Just put
+-- actions "pour"    = Just pour
+-- actions "examine" = Just examine
+-- actions "drink"   = Just drink
+-- actions "open"    = Just open
+-- actions _         = Nothing
+
+-- parseObject :: String -> Maybe Object
+-- parseObject "mug"     = Just mug
+-- parseObject "coffee"  = Just coffeepot
+-- parseObject _         = Nothing 
 
 
-directions :: String -> Maybe Direction
-directions "north"   = Just North
-directions "south"   = Just South
-directions "east"    = Just East
-directions "west"    = Just West
-directions _         = Nothing
+-- directions :: String -> Maybe Direction
+-- directions "north"   = Just North
+-- directions "south"   = Just South
+-- directions "east"    = Just East
+-- directions "west"    = Just West
+-- directions _         = Nothing
 
 commands :: String -> Maybe Command
 commands "quit"      = Just quit
@@ -143,7 +163,7 @@ addInv gd obj = let currRoom = getRoomData gd
    the inventory. -}
 
 removeInv :: GameData -> String -> GameData
-removeInv gd obj = undefined
+removeInv gd obj = gd {inventory = filter (\x -> obj_name x == obj) inventory gd}
 
 {- Does the inventory in the game state contain the given object? -}
 
