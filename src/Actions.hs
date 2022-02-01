@@ -184,13 +184,10 @@ e.g.
 
 go :: Action
 go dir state 
-  = do 
-       d <- parseDirection dir
-       currLoc <- getRoomData 
-       exitRoom <- move dir currLoc 
-       case exitRoom of
-         Just ans -> (state {location_id=ans},"OK")
-         Nothing -> (state,"Unable to move!")
+  = let exitRoom = move dir getRoomData
+        case exitRoom of
+            Just ans -> (state {location_id=ans},"OK")
+            Nothing -> (state,"Unable to move!")
 
 {- Remove an item from the current room, and put it in the player's inventory.
    This should only work if the object is in the current room. Use 'objectHere'
