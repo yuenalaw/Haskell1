@@ -93,7 +93,7 @@ move :: String -> Room -> Maybe String
       else returun Nothing
    -}
 move dir rm = if (res == []) then Nothing else Just $ room_desc (head res) 
-      where res = filter (\x -> dir == exit_dir x) exits rm
+      where res = filter (\x -> dir == exit_dir x) (exits rm)
 
 {- PARTIALLY COMPLETED!! (rather than taking a String, change it to take an Object)
 Return True if the object appears in the room. -}
@@ -200,8 +200,12 @@ go dir state = case move dir getRoomData of
 -}
 
 get :: Action
-get obj state = if objectHere obj then
-                  state { addInv  }
+get obj state = if objectHere obj rm then
+                  addInv (state, obj)
+                  (updateRoom state (location_id state) (removeObject obj rm), "OK")
+                else (state, "That object is not in this room")
+               where rm = getRoomData
+                  
 
 {- Remove an item from the player's inventory, and put it in the current room.
    Similar to 'get' but in reverse - find the object in the inventory, create
@@ -216,7 +220,7 @@ put obj state = undefined
    inventory! -}
 
 examine :: Action
-examine obj state = if objectHere then 
+examine obj state = undefined {-if objectHere then (state, obj_desc obj)-}
 
 {- Pour the coffee. Obviously, this should only work if the player is carrying
    both the pot and the mug. This should update the status of the "mug"
