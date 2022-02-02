@@ -44,6 +44,8 @@ instance Show GameData where
 -- Things which do something to an object and update the game state
 type Action  = String -> GameData -> (GameData, String)
 
+
+
 -- Things which just update the game state
 type Command = GameData -> (GameData, String)
 

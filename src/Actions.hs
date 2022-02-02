@@ -3,6 +3,8 @@ module Actions where
 import World
 import Parsing
 
+type Action' = Object -> GameData -> (GameData,String)
+
 data Direction = North | South | East | West
    deriving Show 
 
@@ -98,20 +100,20 @@ move dir rm = if (res == []) then Nothing else Just $ exit_desc (head res)
 {- PARTIALLY COMPLETED!! (rather than taking a String, change it to take an Object)
 Return True if the object appears in the room. -}
 
--- objectHere :: Object -> Room -> Bool
--- objectHere o rm = o `elem` (objects rm)
-objectHere :: String -> Room -> Bool
-objectHere o rm = o `elem` (map (\x -> obj_name x) (objects rm))
+objectHere :: Object -> Room -> Bool
+objectHere o rm = o `elem` (objects rm)
+-- objectHere :: String -> Room -> Bool
+-- objectHere o rm = o `elem` (map (\x -> obj_name x) (objects rm))
 
 
 {- Given an object id and a room description, return a new room description
    without that object -}
 
--- removeObject :: Object -> Room -> Room
--- removeObject o rm = rm { objects = filter (/= o) (objects rm) }
+removeObject :: Object -> Room -> Room
+removeObject o rm = rm { objects = filter (/= o) (objects rm) }
 {-the above was a trial, but it does not seem to be working-}
-removeObject :: String -> Room -> Room 
-removeObject o rm = rm {objects = filter (\x -> (obj_name x /= o)) (objects rm)}
+-- removeObject :: String -> Room -> Room 
+-- removeObject o rm = rm {objects = filter (\x -> (obj_name x /= o)) (objects rm)}
 
 
 {- Given an object and a room description, return a new room description
@@ -178,7 +180,7 @@ e.g.
 
 -}
 
-go :: Action
+go :: Action'
 go dir state = case move dir (getRoomData state) of
    Just ans -> (state {location_id=ans},"OK")
    Nothing -> (state,"Unable to move!")
@@ -195,15 +197,15 @@ go dir state = case move dir (getRoomData state) of
       (use 'location_id' to find where the player is)
 -}
 
-get :: Action
-get obj state = undefined
-get obj state =if objectHere obj (getRoomData state) 
-                  then addInv state obj
-                       removeObj obj (getRoomData state)
-                       updateRoom (state (location_id state) (getRoomData state))
-                       (state,"OK")
-                  else 
-                     (state,"Item not in room")
+
+get :: Action' --"obj" is an actual obj instead of a string
+get obj state =if objectHere obj (getRoomData state) then 
+                  addInv state obj
+                  removeObj obj (getRoomData state)
+                  updateRoom (state (location_id state) (getRoomData state))
+                  (state,"OK")
+               else 
+                  (state,"Item not in room")
 
 -- Object->Room 
 -- get obj state = if objectHere ()
@@ -219,10 +221,10 @@ get obj state =if objectHere obj (getRoomData state)
    a new room with the object in, update the game world with the new room.
 -}
 
-obtainObj :: GameData -> String -> Object 
-obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
+-- obtainObj :: GameData -> String -> Object 
+-- obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
 
-put :: Action
+put :: Action'
 put obj state = if carrying state obj
                   then removeInv (state obj)
                        addObj ((obtainObj state obj) (getRoomData state)) --finding actual object by going through the state's inv objects
@@ -235,9 +237,9 @@ put obj state = if carrying state obj
    of the object. As long as it's either in the room or the player's 
    inventory! -}
 
-examine :: Action
-examine obj state | carrying state obj                 = (state, obj_desc (obtainObj state obj))
-                  | objectHere obj (getRoomData state) = (state, obj_desc (objectData obj (getRoomData state)))
+examine :: Action'
+examine obj state | carrying state obj                 = (state, obj_desc obj)
+                  | objectHere obj (getRoomData state) = (state, obj_desc (obj (getRoomData state)))
                   | otherwise                          = (state, "Cannot examine object")
 
 
