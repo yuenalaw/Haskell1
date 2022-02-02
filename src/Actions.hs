@@ -98,8 +98,10 @@ move dir rm = if (res == []) then Nothing else Just $ exit_desc (head res)
 {- PARTIALLY COMPLETED!! (rather than taking a String, change it to take an Object)
 Return True if the object appears in the room. -}
 
-objectHere :: Object -> Room -> Bool
-objectHere o rm = o `elem` (objects rm)
+-- objectHere :: Object -> Room -> Bool
+-- objectHere o rm = o `elem` (objects rm)
+objectHere :: String -> Room -> Bool
+objectHere o rm = o `elem` (map (\x -> obj_name x) (objects rm))
 
 
 {- Given an object id and a room description, return a new room description
@@ -126,7 +128,7 @@ findObj o ds = head (filter (\x -> (obj_name x) == o) ds)
 
 {- Use 'findObj' to find an object in a room description -}
 
-objectData :: String -> Room -> Object {-WE SHOULD USE OBJECT HERE TO CHECK!! -}
+objectData :: String -> Room -> Object 
 objectData o rm = findObj o (objects rm)
 
 {- Given a game state and a room id, replace the old room information with
@@ -189,11 +191,14 @@ go dir state = case move dir (getRoomData state) of
 -}
 
 get :: Action
-get obj state = if objectHere obj rm then
-                  addInv (state, obj)
-                  (updateRoom state (location_id state) (removeObject obj rm), "OK")
-                else (state, "That object is not in this room")
-               where rm = getRoomData
+get obj state = undefined
+-- Object->Room 
+-- get obj state = if objectHere ()
+-- get obj state = if objectHere obj rm then
+--                   addInv (state, obj)
+--                   (updateRoom state (location_id state) (removeObject obj rm), "OK")
+--                 else (state, "That object is not in this room")
+--                where rm = getRoomData
                   
 
 {- Remove an item from the player's inventory, and put it in the current room.
