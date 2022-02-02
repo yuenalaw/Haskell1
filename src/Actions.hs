@@ -197,12 +197,13 @@ go dir state = case move dir (getRoomData state) of
 
 get :: Action
 get obj state = undefined
--- get obj state =if objectHere obj (getRoomData state) 
---                   then addInv state obj
---                        removeObj obj (getRoomData state)
---                        updateRoom (state (location_id state) (getRoomData state))
---                   else 
---                      (state,"Item not in room")
+get obj state =if objectHere obj (getRoomData state) 
+                  then addInv state obj
+                       removeObj obj (getRoomData state)
+                       updateRoom (state (location_id state) (getRoomData state))
+                       (state,"OK")
+                  else 
+                     (state,"Item not in room")
 
 -- Object->Room 
 -- get obj state = if objectHere ()
@@ -218,16 +219,27 @@ get obj state = undefined
    a new room with the object in, update the game world with the new room.
 -}
 
+obtainObj :: GameData -> String -> Object 
+obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
+
 put :: Action
-put obj state = undefined
--- put obj state = 
+put obj state = if carrying state obj
+                  then removeInv (state obj)
+                       addObj ((obtainObj state obj) (getRoomData state)) --finding actual object by going through the state's inv objects
+                       updateRoom (state (location_id state) (getRoomData state))
+                       (state,"OK")
+                  else 
+                     (state,"Item not in inventory")
 
 {- Don't update the state, just return a message giving the full description
    of the object. As long as it's either in the room or the player's 
    inventory! -}
 
 examine :: Action
-examine obj state = undefined {-if objectHere then (state, obj_desc obj)-}
+examine obj state | carrying state obj                 = (state, obj_desc (obtainObj state obj))
+                  | objectHere obj (getRoomData state) = (state, obj_desc (objectData obj (getRoomData state)))
+                  | otherwise                          = (state, "Cannot examine object")
+
 
 {-YUE NING WILL DO UP TO HERE!! :) -}
 
