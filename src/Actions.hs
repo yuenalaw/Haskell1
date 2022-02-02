@@ -8,7 +8,7 @@ import Parsing
 data Direction = North | South | East | West
    deriving Show 
 
-data Object' = Coffee | Door | Mug
+data Object' = Coffee | Door | Mug | Door
    deriving Show 
 
 data Command' = Go Direction | Get Object' 
@@ -261,7 +261,16 @@ examine obj state | carrying state obj                 = (state, obj_desc obj)
 
 {-HEY FIONA! it's actually better to use objects instead of strings, i was wrong! so think of "obj" as an actual object :) -}
 pour :: Action
-pour obj state = undefined
+pour Coffee state = if carrying mug then 
+                        if carrying coffeepot then 
+                           do state <- addInv state fullmug 
+                              state <- removeInv state mug 
+                              (state, "OK")
+                          else (state, "You do not have the required items.")
+                          else (state, "You do not have the required items.")
+                  -- not sure if this will work, and the indentation may be off.
+pour _ state = (state, "Cannot pour this object.")
+               
 
 {- Drink the coffee. This should only work if the player has a full coffee 
    mug! Doing this is required to be allowed to open the door. Once it is
@@ -271,8 +280,16 @@ pour obj state = undefined
 -}
 
 drink :: Action
-drink obj state = undefined
-
+drink Coffee state = if carrying fullmug  then 
+                        do state <- addInv state mug 
+                           state <- removeInv state fullmug
+                           state { caffeinated = True }  
+                           (state, "OK")
+                         else (state, "You do not have the required items.")
+                         else (state, "You do not have the required items.")
+                  -- not sure if this will work, and the indentation may be off.
+drink _ state = (state, "Cannot drink this object.")
+               
 {- Open the door. Only allowed if the player has had coffee! 
    This should change the description of the hall to say that the door is open,
    and add an exit out to the street.
@@ -282,7 +299,14 @@ drink obj state = undefined
 -}
 
 open :: Action
-open obj state = undefined
+open Door state = if caffeinated state == True then
+                     if location_id state == "hall" then 
+                        newHall = Room openedhall openedexits []
+                        gd = updateRoom "hall" newHall
+                        (state, "OK")
+                       else (state, "You are not in the correct room.")
+                       else (state, "You need to be caffeinated before you can go outside.")
+open _ state = (state, "Cannot drink this object.")
 
 {- Don't update the game state, just list what the player is carrying -}
 
