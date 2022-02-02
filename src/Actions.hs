@@ -156,14 +156,18 @@ updateRoom gd rmid rmdata = if findRoom gd rmid then gd {world=[if (x==rmid) the
 --                     wantedObj = objectData obj currRoom
 --                 in gd {inventory = (inventory gd) ++ [wantedObj]}
 addInv :: GameData -> Object -> GameData 
-addInv gd obj = gd {inventory = (inventory gd) ++ [obj]}
+addInv gd obj 
+   | objectHere obj (getRoomData gd) = gd {inventory = (inventory gd) ++ [obj]}
+   | otherwise = gd
             
 {- Given a game state and an object id, remove the object from the
    inventory. Hint: use filter to check if something should still be in
    the inventory. -}
 
-removeInv :: GameData -> String -> GameData
-removeInv gd obj = gd {inventory = filter (\x -> obj_name x == obj) (inventory gd)}
+removeInv :: GameData -> Object -> GameData
+removeInv gd obj 
+   | obj `elem` inventory gd = gd {inventory = filter (\x -> x == obj) (inventory gd)}
+   | otherwise = gd
 
 {- Does the inventory in the game state contain the given object? -}
 
@@ -202,38 +206,41 @@ go dir state = case move dir (getRoomData state) of
 -}
 
 
-get :: Action' --"obj" is an actual obj instead of a string
+-- get :: Action' --"obj" is an actual obj instead of a string
 
-get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where latestState = updateRoom (newState (location_id newState) (newRoom)) where newRoom = removeObj obj (getRoomData newState) where newState = addInv state obj
-                  -- let newState = addInv state obj --use objectData?
-                  --     newRoom = removeObj obj (getRoomData newState)
-                  --     latestState = updateRoom (newState (location_id newState) (newRoom))
-                  -- in (latestState,"OK")
-              | otherwise                          = (state,"Item not in room")
+-- get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where 
+--    latestState = updateRoom (newState (location_id newState) (newRoom)) where 
+--       newRoom = removeObj obj (getRoomData newState) where 
+--          newState = addInv state obj
+--                   -- let newState = addInv state obj --use objectData?
+--                   --     newRoom = removeObj obj (getRoomData newState)
+--                   --     latestState = updateRoom (newState (location_id newState) (newRoom))
+--                   -- in (latestState,"OK")
+--               | otherwise                          = (state,"Item not in room")
 
--- get obj state = if objectHere obj rm then
---                   addInv (state, obj)
---                   (updateRoom state (location_id state) (removeObject obj rm), "OK")
---                 else (state, "That object is not in this room")
---                where rm = getRoomData
+-- -- get obj state = if objectHere obj rm then
+-- --                   addInv (state, obj)
+-- --                   (updateRoom state (location_id state) (removeObject obj rm), "OK")
+-- --                 else (state, "That object is not in this room")
+-- --                where rm = getRoomData
                   
 
-{- Remove an item from the player's inventory, and put it in the current room.
-   Similar to 'get' but in reverse - find the object in the inventory, create
-   a new room with the object in, update the game world with the new room.
--}
+-- {- Remove an item from the player's inventory, and put it in the current room.
+--    Similar to 'get' but in reverse - find the object in the inventory, create
+--    a new room with the object in, update the game world with the new room.
+-- -}
 
--- obtainObj :: GameData -> String -> Object 
--- obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
+-- -- obtainObj :: GameData -> String -> Object 
+-- -- obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
 
-put :: Action'
-put obj state = if carrying state obj then 
-                  let newState = removeInv (state obj)
-                      newRoom = addObj ((obtainObj newState obj) (getRoomData newState)) --finding actual object by going through the state's inv objects
-                      latestState = updateRoom (newState (location_id newState) (newRoom))
-                  in (newState,"OK")
-               else 
-                  (state,"Item not in inventory")
+-- put :: Action'
+-- put obj state = if carrying state obj then 
+--                   let newState = removeInv (state obj)
+--                       newRoom = addObj ((obtainObj newState obj) (getRoomData newState)) --finding actual object by going through the state's inv objects
+--                       latestState = updateRoom (newState (location_id newState) (newRoom))
+--                   in (newState,"OK")
+--                else 
+--                   (state,"Item not in inventory")
 
 {- Don't update the state, just return a message giving the full description
    of the object. As long as it's either in the room or the player's 
@@ -241,7 +248,7 @@ put obj state = if carrying state obj then
 
 examine :: Action'
 examine obj state | carrying state obj                 = (state, obj_desc obj)
-                  | objectHere obj (getRoomData state) = (state, obj_desc (obj (getRoomData state)))
+                  | objectHere obj (getRoomData state) = (state, obj_desc obj)
                   | otherwise                          = (state, "Cannot examine object")
 
 
