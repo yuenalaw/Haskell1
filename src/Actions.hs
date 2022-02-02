@@ -107,9 +107,11 @@ objectHere o rm = o `elem` (map (\x -> obj_name x) (objects rm))
 {- Given an object id and a room description, return a new room description
    without that object -}
 
-removeObject :: Object -> Room -> Room
-removeObject o rm = rm { objects = filter (/= o) (objects rm) }
+-- removeObject :: Object -> Room -> Room
+-- removeObject o rm = rm { objects = filter (/= o) (objects rm) }
 {-the above was a trial, but it does not seem to be working-}
+removeObject :: String -> Room -> Room 
+removeObject o rm = rm {objects = filter (\x -> (obj_name x /= o)) (objects rm)}
 
 
 {- Given an object and a room description, return a new room description
@@ -193,6 +195,9 @@ go dir state = case move dir (getRoomData state) of
 
 get :: Action
 get obj state = undefined
+-- get obj state = if objectHere obj (getRoomData state) then
+--                    addInv (state,obj)
+--                    removeObj ()
 -- Object->Room 
 -- get obj state = if objectHere ()
 -- get obj state = if objectHere obj rm then
