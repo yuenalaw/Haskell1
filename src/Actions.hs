@@ -3,7 +3,7 @@ module Actions where
 import World
 import Parsing
 
-type Action' = Object -> GameData -> (GameData,String)
+
 
 data Direction = North | South | East | West
    deriving Show 
@@ -16,6 +16,8 @@ data Command' = Go Direction | Get Object'
                | Examine Object' | Drink Object'
                | Open Object' 
    deriving Show 
+
+type Action' = Object -> GameData -> (GameData,String)
 
 parseDirection :: Parser Direction
 parseDirection
@@ -149,10 +151,12 @@ updateRoom gd rmid rmdata = if findRoom gd rmid then gd {world=[if (x==rmid) the
 {- Given a game state and an object id, find the object in the current
    room and add it to the player's inventory -}
 
-addInv :: GameData -> String -> GameData
-addInv gd obj = let currRoom = getRoomData gd 
-                    wantedObj = objectData obj currRoom
-                in gd {inventory = (inventory gd) ++ [wantedObj]}
+-- addInv :: GameData -> String -> GameData
+-- addInv gd obj = let currRoom = getRoomData gd 
+--                     wantedObj = objectData obj currRoom
+--                 in gd {inventory = (inventory gd) ++ [wantedObj]}
+addInv :: GameData -> Object -> GameData 
+addInv gd obj = gd {inventory = (inventory gd) ++ [obj]}
             
 {- Given a game state and an object id, remove the object from the
    inventory. Hint: use filter to check if something should still be in
@@ -180,7 +184,7 @@ e.g.
 
 -}
 
-go :: Action'
+go :: Action
 go dir state = case move dir (getRoomData state) of
    Just ans -> (state {location_id=ans},"OK")
    Nothing -> (state,"Unable to move!")
@@ -199,16 +203,14 @@ go dir state = case move dir (getRoomData state) of
 
 
 get :: Action' --"obj" is an actual obj instead of a string
-get obj state =if objectHere obj (getRoomData state) then 
-                  addInv state obj
-                  removeObj obj (getRoomData state)
-                  updateRoom (state (location_id state) (getRoomData state))
-                  (state,"OK")
-               else 
-                  (state,"Item not in room")
 
--- Object->Room 
--- get obj state = if objectHere ()
+get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where latestState = updateRoom (newState (location_id newState) (newRoom)) where newRoom = removeObj obj (getRoomData newState) where newState = addInv state obj
+                  -- let newState = addInv state obj --use objectData?
+                  --     newRoom = removeObj obj (getRoomData newState)
+                  --     latestState = updateRoom (newState (location_id newState) (newRoom))
+                  -- in (latestState,"OK")
+              | otherwise                          = (state,"Item not in room")
+
 -- get obj state = if objectHere obj rm then
 --                   addInv (state, obj)
 --                   (updateRoom state (location_id state) (removeObject obj rm), "OK")
@@ -225,13 +227,13 @@ get obj state =if objectHere obj (getRoomData state) then
 -- obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
 
 put :: Action'
-put obj state = if carrying state obj
-                  then removeInv (state obj)
-                       addObj ((obtainObj state obj) (getRoomData state)) --finding actual object by going through the state's inv objects
-                       updateRoom (state (location_id state) (getRoomData state))
-                       (state,"OK")
-                  else 
-                     (state,"Item not in inventory")
+put obj state = if carrying state obj then 
+                  let newState = removeInv (state obj)
+                      newRoom = addObj ((obtainObj newState obj) (getRoomData newState)) --finding actual object by going through the state's inv objects
+                      latestState = updateRoom (newState (location_id newState) (newRoom))
+                  in (newState,"OK")
+               else 
+                  (state,"Item not in inventory")
 
 {- Don't update the state, just return a message giving the full description
    of the object. As long as it's either in the room or the player's 
