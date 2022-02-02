@@ -163,10 +163,10 @@ removeInv gd obj = gd {inventory = filter (\x -> obj_name x == obj) (inventory g
 
 {- Does the inventory in the game state contain the given object? -}
 
--- carrying :: GameData -> Object -> Bool
--- carrying gd obj = obj `elem` inventory gd
-carrying :: GameData -> String -> Bool 
-carrying gd obj = obj `elem` (map (\x -> obj_name x) (inventory gd))
+carrying :: GameData -> Object -> Bool
+carrying gd obj = obj `elem` inventory gd
+-- carrying :: GameData -> String -> Bool 
+-- carrying gd obj = obj `elem` (map (\x -> obj_name x) (inventory gd))
 
 {-
 Define the "go" action. Given a direction and a game state, update the game
