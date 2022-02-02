@@ -206,17 +206,17 @@ go dir state = case move dir (getRoomData state) of
 -}
 
 
--- get :: Action' --"obj" is an actual obj instead of a string
+get :: Action' --"obj" is an actual obj instead of a string
 
--- get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where 
---    latestState = updateRoom (newState (location_id newState) (newRoom)) where 
---       newRoom = removeObj obj (getRoomData newState) where 
---          newState = addInv state obj
---                   -- let newState = addInv state obj --use objectData?
---                   --     newRoom = removeObj obj (getRoomData newState)
---                   --     latestState = updateRoom (newState (location_id newState) (newRoom))
---                   -- in (latestState,"OK")
---               | otherwise                          = (state,"Item not in room")
+get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where 
+   latestState = updateRoom (newState (location_id newState) (newRoom)) where 
+      newRoom = removeObj obj (getRoomData newState) where 
+         newState = addInv state obj
+                  -- let newState = addInv state obj --use objectData?
+                  --     newRoom = removeObj obj (getRoomData newState)
+                  --     latestState = updateRoom (newState (location_id newState) (newRoom))
+                  -- in (latestState,"OK")
+              | otherwise                          = (state,"Item not in room")
 
 -- -- get obj state = if objectHere obj rm then
 -- --                   addInv (state, obj)
@@ -259,6 +259,7 @@ examine obj state | carrying state obj                 = (state, obj_desc obj)
    object in the player's inventory to be a new object, a "full mug".
 -}
 
+{-HEY FIONA! it's actually better to use objects instead of strings, i was wrong! so think of "obj" as an actual object :) -}
 pour :: Action
 pour obj state = undefined
 
