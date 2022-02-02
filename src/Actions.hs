@@ -137,6 +137,7 @@ objectData o rm = findObj o (objects rm)
 findRoom :: GameData -> String -> Bool 
 findRoom gd rmid = if filter (\(x,y) -> x == rmid) (world gd) == [] then False else True 
 
+
 updateRoom :: GameData -> String -> Room -> GameData
 updateRoom gd rmid rmdata = if findRoom gd rmid then gd {world=[if (x==rmid) then (rmid,rmdata) else (x,y)| (x,y) <- world gd]} else gd {world=(world gd ++ [(rmid,rmdata)])}
                
