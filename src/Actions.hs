@@ -161,8 +161,10 @@ removeInv gd obj = gd {inventory = filter (\x -> obj_name x == obj) (inventory g
 
 {- Does the inventory in the game state contain the given object? -}
 
-carrying :: GameData -> Object -> Bool
-carrying gd obj = obj `elem` inventory gd
+-- carrying :: GameData -> Object -> Bool
+-- carrying gd obj = obj `elem` inventory gd
+carrying :: GameData -> String -> Bool 
+carrying gd obj = obj `elem` (map (\x -> obj_name x) (inventory gd))
 
 {-
 Define the "go" action. Given a direction and a game state, update the game
@@ -195,9 +197,13 @@ go dir state = case move dir (getRoomData state) of
 
 get :: Action
 get obj state = undefined
--- get obj state = if objectHere obj (getRoomData state) then
---                    addInv (state,obj)
---                    removeObj ()
+-- get obj state =if objectHere obj (getRoomData state) 
+--                   then addInv state obj
+--                        removeObj obj (getRoomData state)
+--                        updateRoom (state (location_id state) (getRoomData state))
+--                   else 
+--                      (state,"Item not in room")
+
 -- Object->Room 
 -- get obj state = if objectHere ()
 -- get obj state = if objectHere obj rm then
@@ -214,6 +220,7 @@ get obj state = undefined
 
 put :: Action
 put obj state = undefined
+-- put obj state = 
 
 {- Don't update the state, just return a message giving the full description
    of the object. As long as it's either in the room or the player's 
@@ -221,6 +228,8 @@ put obj state = undefined
 
 examine :: Action
 examine obj state = undefined {-if objectHere then (state, obj_desc obj)-}
+
+{-YUE NING WILL DO UP TO HERE!! :) -}
 
 {- Pour the coffee. Obviously, this should only work if the player is carrying
    both the pot and the mug. This should update the status of the "mug"
