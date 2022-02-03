@@ -233,14 +233,14 @@ get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where
 -- -- obtainObj :: GameData -> String -> Object 
 -- -- obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
 
--- put :: Action'
--- put obj state = if carrying state obj then 
---                   let newState = removeInv (state obj)
---                       newRoom = addObj ((obtainObj newState obj) (getRoomData newState)) --finding actual object by going through the state's inv objects
---                       latestState = updateRoom (newState (location_id newState) (newRoom))
---                   in (newState,"OK")
---                else 
---                   (state,"Item not in inventory")
+put :: Action'
+put obj state = if carrying state obj then 
+                  let newState = removeInv (state obj)
+                      newRoom = addObj ((obtainObj newState obj) (getRoomData newState)) --finding actual object by going through the state's inv objects
+                      latestState = updateRoom (newState (location_id newState) (newRoom))
+                  in (newState,"OK")
+               else 
+                  (state,"Item not in inventory")
 
 {- Don't update the state, just return a message giving the full description
    of the object. As long as it's either in the room or the player's 
