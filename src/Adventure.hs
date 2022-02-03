@@ -25,7 +25,7 @@ process :: GameData -> [String] -> (GameData, String)
 process state [cmd,arg] = case actions cmd of
                             Just fn -> fn arg state
                             Nothing -> (state, "I don't understand")
-process state [cmd]     = case commands cmd of
+process state [cmd]     = case instructions cmd of
                             Just fn -> fn state
                             Nothing -> (state, "I don't understand")
 process state _ = (state, "I don't understand")
