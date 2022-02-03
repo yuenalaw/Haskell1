@@ -11,13 +11,17 @@ data Direction = North | South | East | West
 data Object' = Coffee | Door | Mug | Coffeepot | FullMug
    deriving Show 
 
-data Command' = Go Direction | Get Object' 
-               | Drop Object' | Pour Object'
-               | Examine Object' | Drink Object'
-               | Open Object' 
+
+
+
+data Command = Go Direction | Get Object 
+               | Drop Object | Pour Object
+               | Examine Object | Drink Object
+               | Open Object 
    deriving Show 
 
-type Action' = Object -> GameData -> (GameData,String)
+
+
 
 parseDirection :: Parser Direction
 parseDirection
@@ -30,19 +34,19 @@ parseDirection
    ||| do string "west"
           return West  
 
-validate :: String -> String -> Maybe Command'
+validate :: String -> String -> Maybe Command
 validate "go" "north" = Just (Go North)
 validate "go" "south" = Just (Go South)
 validate "go" "east" = Just (Go East)
 validate "go" "west" = Just (Go West)
-validate "get" "mug" = Just (Get Mug)
-validate "get" "coffee" = Just (Get Coffee)
-validate "drop" "mug" = Just (Drop Mug)
-validate "drop" "coffee" = Just (Drop Coffee)
-validate "pour" "coffee" = Just (Pour Coffee)
-validate "examine" "mug" = Just (Examine Mug)
-validate "examine" "coffee" = Just (Examine Coffee)
-validate "drink" "coffee" = Just (Drink Coffee)
+validate "get" "mug" = Just (Get mug)
+--validate "get" "coffee" = Just (Get coffee)
+validate "drop" "mug" = Just (Drop mug)
+--validate "drop" "coffee" = Just (Drop Coffee)
+validate "pour" "coffee" = Just (Pour coffeepot)
+validate "examine" "mug" = Just (Examine mug)
+validate "examine" "coffee" = Just (Examine fullmug)
+validate "drink" "coffee" = Just (Drink fullmug)
 validate "open" "door" = Just (Open Door)
 validate _ _ = Nothing
 
@@ -51,15 +55,14 @@ validate _ _ = Nothing
 -- commandOther "inv" = Just inv
 -- commandOther _ = Nothing
 
--- actions :: String -> Maybe Action
--- actions "go"      = Just go 
--- actions "get"     = Just get
--- actions "drop"    = Just put
--- actions "pour"    = Just pour
--- actions "examine" = Just examine
--- actions "drink"   = Just drink
--- actions "open"    = Just open
--- actions _         = Nothing
+performAction :: GameData -> Command -> (GameData, String)
+performAction gd (Go d)            = go gd d
+performAction gd (Get obj)         = get gd d
+performAction gd (Drop obj)        = drop gd obj
+performAction gd (Pour obj)        = pour gd obj
+performAction gd (Examine obj)     = examine gd obj
+performAction gd (Drink obj)       = drink gd obj
+performAction gd (Open obj)        = open gd obj
 
 -- parseObject :: String -> Maybe Object
 -- parseObject "mug"     = Just mug
@@ -74,10 +77,10 @@ validate _ _ = Nothing
 -- directions "west"    = Just West
 -- directions _         = Nothing
 
-commands :: String -> Maybe Command
-commands "quit"      = Just quit
-commands "inventory" = Just inv
-commands _           = Nothing
+instructions :: String -> Maybe Instruction
+instructions "quit"      = Just quit
+instructions "inventory" = Just inv
+instructions _           = Nothing
 
 
 {- Given a direction and a room to move from, return the room id in
@@ -240,6 +243,7 @@ examine obj state | carrying state obj                 = (state, obj_desc obj)
    object in the player's inventory to be a new object, a "full mug".
 -}
 
+<<<<<<< HEAD
 pour :: Action'
 {-an idea?? create makeFullMug function-}
 pour obj state | carrying state Coffeepot && carrying state Mug = (state {inventory=(filter (/= FullMug) (inventory state)) ++ Mug},"OK")
@@ -254,6 +258,7 @@ pour obj state | carrying state Coffeepot && carrying state Mug = (state {invent
 --                           else (state, "You do not have the required items.")
 --                   -- not sure if this will work, and the indentation may be off.
 -- pour _ state = (state, "Cannot pour this object.")
+=======
                
 
 {- Drink the coffee. This should only work if the player has a full coffee 
@@ -300,12 +305,12 @@ open Door state | caffeinated state = (updateRoom state "hall" Room (openedhall 
 
 {- Don't update the game state, just list what the player is carrying -}
 
-inv :: Command
+inv :: Instruction
 inv state = (state, showInv (inventory state))
    where showInv [] = "You aren't carrying anything"
          showInv xs = "You are carrying:\n" ++ showInv' xs
          showInv' [x] = obj_longname x
          showInv' (x:xs) = obj_longname x ++ "\n" ++ showInv' xs
 
-quit :: Command
+quit :: Instruction
 quit state = (state { finished = True }, "Bye bye")

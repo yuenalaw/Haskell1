@@ -42,11 +42,11 @@ instance Show GameData where
     show gd = show (getRoomData gd)
 
 -- Things which do something to an object and update the game state
-type Action  = String -> GameData -> (GameData, String)
+type Action  = Object -> GameData -> (GameData, String)
 
 
 -- Things which just update the game state
-type Command = GameData -> (GameData, String)
+type Instruction = GameData -> (GameData, String)
 
 mug, fullmug, coffeepot :: Object
 mug       = Obj "mug" "a coffee mug" "A coffee mug"
