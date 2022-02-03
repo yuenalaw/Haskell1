@@ -8,7 +8,7 @@ import Parsing
 data Direction = North | South | East | West
    deriving Show 
 
-data Object' = Coffee | Door | Mug | Door
+data Object' = Coffee | Door | Mug
    deriving Show 
 
 data Command' = Go Direction | Get Object' 
@@ -206,6 +206,26 @@ go dir state = case move dir (getRoomData state) of
 -}
 
 
+
+get :: Action' --"obj" is an actual obj instead of a string
+
+get obj state | objectHere obj (getRoomData state) 
+                        = do newState <- addInv state obj 
+                             newRoom <- removeObj obj (getRoomData newState) 
+                             latestState <- updateRoom (newState (location_id newState) (newRoom)) 
+                             (latestState, "OK") 
+              | otherwise = (state,"Item not in room")
+      
+         
+                  -- let newState = addInv state obj --use objectData?
+                  --     newRoom = removeObj obj (getRoomData newState)
+                  --     latestState = updateRoom (newState (location_id newState) (newRoom))
+                  -- in (latestState,"OK")
+              
+
+
+
+{-
 get :: Action' --"obj" is an actual obj instead of a string
 
 get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where 
@@ -217,6 +237,8 @@ get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where
                   --     latestState = updateRoom (newState (location_id newState) (newRoom))
                   -- in (latestState,"OK")
               | otherwise                          = (state,"Item not in room")
+
+-}
 
 -- -- get obj state = if objectHere obj rm then
 -- --                   addInv (state, obj)
@@ -285,8 +307,7 @@ drink Coffee state = if carrying fullmug  then
                            state <- removeInv state fullmug
                            state { caffeinated = True }  
                            (state, "OK")
-                         else (state, "You do not have the required items.")
-                         else (state, "You do not have the required items.")
+                           else (state, "You do not have the required items.")   
                   -- not sure if this will work, and the indentation may be off.
 drink _ state = (state, "Cannot drink this object.")
                
@@ -299,11 +320,13 @@ drink _ state = (state, "Cannot drink this object.")
 -}
 
 open :: Action
-open Door state = if caffeinated state == True then
+open Door state = if caffeinated state then
                      if location_id state == "hall" then 
-                        newHall = Room openedhall openedexits []
-                        gd = updateRoom "hall" newHall
-                        (state, "OK")
+                         do gd <- updateRoom "hall" (Room
+                                   openedhall 
+                                   openedexits 
+                                   [])
+                            (gd, "OK")
                        else (state, "You are not in the correct room.")
                        else (state, "You need to be caffeinated before you can go outside.")
 open _ state = (state, "Cannot drink this object.")

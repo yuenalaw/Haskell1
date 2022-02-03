@@ -45,7 +45,6 @@ instance Show GameData where
 type Action  = String -> GameData -> (GameData, String)
 
 
-
 -- Things which just update the game state
 type Command = GameData -> (GameData, String)
 
