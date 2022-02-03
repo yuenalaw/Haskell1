@@ -211,44 +211,14 @@ go dir state = case move dir (getRoomData state) of
 
 
 get :: Action' --"obj" is an actual obj instead of a string
-
-get obj state | objectHere obj (getRoomData state) 
-                        = do newState <- addInv state obj 
-                             newRoom <- removeObj obj (getRoomData newState) 
-                             latestState <- updateRoom (newState (location_id newState) (newRoom)) 
-                             (latestState, "OK") 
-              | otherwise = (state,"Item not in room")
-      
-         
+get obj state | objectHere obj (getRoomData state) = (updateRoom state (location_id state) (removeObject obj (getRoomData (addInv state obj))),"OK") 
+              | otherwise                          = (state, "Item not in room")
+     
                   -- let newState = addInv state obj --use objectData?
                   --     newRoom = removeObj obj (getRoomData newState)
                   --     latestState = updateRoom (newState (location_id newState) (newRoom))
                   -- in (latestState,"OK")
               
-
-
-
-{-
-get :: Action' --"obj" is an actual obj instead of a string
-
-get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where 
-   latestState = updateRoom (newState (location_id newState) (newRoom)) where 
-      newRoom = removeObj obj (getRoomData newState) where 
-         newState = addInv state obj
-                  -- let newState = addInv state obj --use objectData?
-                  --     newRoom = removeObj obj (getRoomData newState)
-                  --     latestState = updateRoom (newState (location_id newState) (newRoom))
-                  -- in (latestState,"OK")
-              | otherwise                          = (state,"Item not in room")
-
--}
-
--- -- get obj state = if objectHere obj rm then
--- --                   addInv (state, obj)
--- --                   (updateRoom state (location_id state) (removeObject obj rm), "OK")
--- --                 else (state, "That object is not in this room")
--- --                where rm = getRoomData
-                  
 
 -- {- Remove an item from the player's inventory, and put it in the current room.
 --    Similar to 'get' but in reverse - find the object in the inventory, create
@@ -258,11 +228,13 @@ get obj state | objectHere obj (getRoomData state) = (latestState,"OK") where
 -- -- obtainObj :: GameData -> String -> Object 
 -- -- obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
 
--- put :: Action'
+put :: Action'
+put obj state | carrying state obj = (updateRoom state (location_id state) (addObject obj (getRoomData (removeInv state obj))), "OK")
+              | otherwise          = (state, "Item not in inventory")
 -- put obj state = if carrying state obj then 
---                   let newState = removeInv (state obj)
---                       newRoom = addObj ((obtainObj newState obj) (getRoomData newState)) --finding actual object by going through the state's inv objects
---                       latestState = updateRoom (newState (location_id newState) (newRoom))
+--                   let newState = removeInv (state obj);
+--                       newRoom = addObj ((obtainObj newState obj) (getRoomData newState)); --finding actual object by going through the state's inv objects
+--                       latestState = updateRoom (newState (location_id newState) (newRoom));
 --                   in (newState,"OK")
 --                else 
 --                   (state,"Item not in inventory")
