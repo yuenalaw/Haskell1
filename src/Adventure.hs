@@ -22,8 +22,8 @@ parseInput ["go", d] = case parseDirection d of
                             Just dir -> Just dir
 -}
 process :: GameData -> [String] -> (GameData, String)
-process state [cmd,arg] = case actions cmd of
-                            Just fn -> fn arg state
+process state [cmd,arg] = case validate cmd arg of
+                            Just com -> performAction state com
                             Nothing -> (state, "I don't understand")
 process state [cmd]     = case instructions cmd of
                             Just fn -> fn state
