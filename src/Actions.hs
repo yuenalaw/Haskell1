@@ -4,7 +4,6 @@ import World
 import Parsing
 
 
-
 data Direction = North | South | East | West
    deriving Show 
 
@@ -12,17 +11,13 @@ data Object' = Coffee | Door | Mug
    deriving Show 
 
 
-
-
 data Command = Go Direction | Get Object 
-               | Drop Object | Pour Object
+               | Pour Object
                | Examine Object | Drink Object
                | Open Object 
    deriving Show 
 
-
-
-
+{-
 parseDirection :: Parser Direction
 parseDirection
      = do string "north"
@@ -33,6 +28,8 @@ parseDirection
           return East  
    ||| do string "west"
           return West  
+-}
+
 
 validate :: String -> String -> Maybe Command
 validate "go" "north" = Just (Go North)
@@ -41,7 +38,7 @@ validate "go" "east" = Just (Go East)
 validate "go" "west" = Just (Go West)
 validate "get" "mug" = Just (Get mug)
 --validate "get" "coffee" = Just (Get coffee)
-validate "drop" "mug" = Just (Drop mug)
+--validate "drop" "mug" = Just (Drop mug)
 --validate "drop" "coffee" = Just (Drop Coffee)
 validate "pour" "coffee" = Just (Pour coffeepot)
 validate "examine" "mug" = Just (Examine mug)
@@ -56,13 +53,12 @@ validate _ _ = Nothing
 -- commandOther _ = Nothing
 
 performAction :: GameData -> Command -> (GameData, String)
-performAction gd (Go d)            = go gd d
-performAction gd (Get obj)         = get gd d
-performAction gd (Drop obj)        = drop gd obj
-performAction gd (Pour obj)        = pour gd obj
-performAction gd (Examine obj)     = examine gd obj
-performAction gd (Drink obj)       = drink gd obj
-performAction gd (Open obj)        = open gd obj
+performAction gd (Go d)            = go d gd
+performAction gd (Get obj)         = get obj gd
+performAction gd (Pour obj)        = pour obj gd
+performAction gd (Examine obj)     = examine obj gd
+performAction gd (Drink obj)       = drink obj gd
+performAction gd (Open obj)        = open obj gd
 
 -- parseObject :: String -> Maybe Object
 -- parseObject "mug"     = Just mug
@@ -95,7 +91,7 @@ Just "kitchen"
 Nothing
 -}
 
-move :: String -> Room -> Maybe String
+move :: Direction -> Room -> Maybe String
    {- check each of the exits in the room and if one matches the direction given return that exit
       else returun Nothing
    -}
@@ -169,7 +165,7 @@ addInv gd obj
 
 removeInv :: GameData -> Object -> GameData
 removeInv gd obj 
-   | obj `elem` inventory gd = gd {inventory = filter (\x -> x == obj) (inventory gd)}
+   | carrying gd obj = gd {inventory = filter (\x -> x == obj) (inventory gd)}
    | otherwise = gd
 
 {- Does the inventory in the game state contain the given object? -}
@@ -191,7 +187,7 @@ e.g.
 
 -}
 
-go :: Action
+go :: Direction -> GameData -> (GameData, String)
 go dir state = case move dir (getRoomData state) of
    Just ans -> (state {location_id=ans},"OK")
    Nothing -> (state,"Unable to move!")
@@ -210,7 +206,7 @@ go dir state = case move dir (getRoomData state) of
 
 
 
-get :: Action' --"obj" is an actual obj instead of a string
+get :: Action --"obj" is an actual obj instead of a string
 get obj state | objectHere obj (getRoomData state) = (updateRoom state (location_id state) (removeObject obj (getRoomData (addInv state obj))),"OK") 
               | otherwise                          = (state, "Item not in room")
      
@@ -218,7 +214,7 @@ get obj state | objectHere obj (getRoomData state) = (updateRoom state (location
                   --     newRoom = removeObj obj (getRoomData newState)
                   --     latestState = updateRoom (newState (location_id newState) (newRoom))
                   -- in (latestState,"OK")
-              
+         
 
 -- {- Remove an item from the player's inventory, and put it in the current room.
 --    Similar to 'get' but in reverse - find the object in the inventory, create
@@ -228,7 +224,7 @@ get obj state | objectHere obj (getRoomData state) = (updateRoom state (location
 -- -- obtainObj :: GameData -> String -> Object 
 -- -- obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
 
-put :: Action'
+put :: Action
 put obj state | carrying state obj = (updateRoom state (location_id state) (addObject obj (getRoomData (removeInv state obj))), "OK")
               | otherwise          = (state, "Item not in inventory")
 -- put obj state = if carrying state obj then 
@@ -243,7 +239,7 @@ put obj state | carrying state obj = (updateRoom state (location_id state) (addO
    of the object. As long as it's either in the room or the player's 
    inventory! -}
 
-examine :: Action'
+examine :: Action
 examine obj state | carrying state obj                 = (state, obj_desc obj)
                   | objectHere obj (getRoomData state) = (state, obj_desc obj)
                   | otherwise                          = (state, "Cannot examine object")
@@ -276,7 +272,7 @@ pour _ state = (state, "Cannot pour this object.")
 -}
 
 drink :: Action
-drink Coffee state = if carrying fullmug  then 
+drink coffeepot state = if carrying fullmug  then 
                         do state <- addInv state mug 
                            state <- removeInv state fullmug
                            state { caffeinated = True }  
@@ -294,7 +290,7 @@ drink _ state = (state, "Cannot drink this object.")
 -}
 
 open :: Action
-open Door state = if caffeinated state then
+open door state = if caffeinated state then
                      if location_id state == "hall" then 
                          do gd <- updateRoom "hall" (Room
                                    openedhall 
