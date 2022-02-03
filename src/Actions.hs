@@ -8,7 +8,7 @@ import Parsing
 data Direction = North | South | East | West
    deriving Show 
 
-data Object' = Coffee | Door | Mug
+data Object' = Coffee | Door | Mug | Coffeepot | FullMug
    deriving Show 
 
 data Command' = Go Direction | Get Object' 
@@ -207,16 +207,11 @@ go dir state = case move dir (getRoomData state) of
 
 
 
-get :: Action' --"obj" is an actual obj instead of a string
+get :: Action' --have not used objectData??!!
 get obj state | objectHere obj (getRoomData state) = (updateRoom state (location_id state) (removeObject obj (getRoomData (addInv state obj))),"OK") 
               | otherwise                          = (state, "Item not in room")
-     
-                  -- let newState = addInv state obj --use objectData?
-                  --     newRoom = removeObj obj (getRoomData newState)
-                  --     latestState = updateRoom (newState (location_id newState) (newRoom))
-                  -- in (latestState,"OK")
-              
 
+            
 -- {- Remove an item from the player's inventory, and put it in the current room.
 --    Similar to 'get' but in reverse - find the object in the inventory, create
 --    a new room with the object in, update the game world with the new room.
@@ -228,13 +223,7 @@ get obj state | objectHere obj (getRoomData state) = (updateRoom state (location
 put :: Action'
 put obj state | carrying state obj = (updateRoom state (location_id state) (addObject obj (getRoomData (removeInv state obj))), "OK")
               | otherwise          = (state, "Item not in inventory")
--- put obj state = if carrying state obj then 
---                   let newState = removeInv (state obj);
---                       newRoom = addObj ((obtainObj newState obj) (getRoomData newState)); --finding actual object by going through the state's inv objects
---                       latestState = updateRoom (newState (location_id newState) (newRoom));
---                   in (newState,"OK")
---                else 
---                   (state,"Item not in inventory")
+
 
 {- Don't update the state, just return a message giving the full description
    of the object. As long as it's either in the room or the player's 
@@ -246,24 +235,25 @@ examine obj state | carrying state obj                 = (state, obj_desc obj)
                   | otherwise                          = (state, "Cannot examine object")
 
 
-{-YUE NING WILL DO UP TO HERE!! :) -}
-
 {- Pour the coffee. Obviously, this should only work if the player is carrying
    both the pot and the mug. This should update the status of the "mug"
    object in the player's inventory to be a new object, a "full mug".
 -}
 
-{-HEY FIONA! it's actually better to use objects instead of strings, i was wrong! so think of "obj" as an actual object :) -}
-pour :: Action
-pour Coffee state = if carrying mug then 
-                        if carrying coffeepot then 
-                           do state <- addInv state fullmug 
-                              state <- removeInv state mug 
-                              (state, "OK")
-                          else (state, "You do not have the required items.")
-                          else (state, "You do not have the required items.")
-                  -- not sure if this will work, and the indentation may be off.
-pour _ state = (state, "Cannot pour this object.")
+pour :: Action'
+{-an idea?? create makeFullMug function-}
+pour obj state | carrying state Coffeepot && carrying state Mug = (state {inventory=(filter (/= FullMug) (inventory state)) ++ Mug},"OK")
+               | otherwise                          = (state,"Cannot pour object")
+
+-- pour Coffee state = if carrying mug then 
+--                         if carrying coffeepot then 
+--                            do state <- addInv state fullmug 
+--                               state <- removeInv state mug 
+--                               (state, "OK")
+--                           else (state, "You do not have the required items.")
+--                           else (state, "You do not have the required items.")
+--                   -- not sure if this will work, and the indentation may be off.
+-- pour _ state = (state, "Cannot pour this object.")
                
 
 {- Drink the coffee. This should only work if the player has a full coffee 
@@ -273,15 +263,18 @@ pour _ state = (state, "Cannot pour this object.")
    Also, put the empty coffee mug back in the inventory!
 -}
 
-drink :: Action
-drink Coffee state = if carrying fullmug  then 
-                        do state <- addInv state mug 
-                           state <- removeInv state fullmug
-                           state { caffeinated = True }  
-                           (state, "OK")
-                           else (state, "You do not have the required items.")   
-                  -- not sure if this will work, and the indentation may be off.
-drink _ state = (state, "Cannot drink this object.")
+drink :: Action'
+drink obj state | carrying state FullMug = (state {inventory=(filter (/= Mug) (inventory state)) ++ FullMug,caffeinated=True},"OK")
+                | otherwise              = (state,"Cannot drink this object")
+
+-- drink Coffee state = if carrying fullmug  then 
+--                         do state <- addInv state mug 
+--                            state <- removeInv state fullmug
+--                            state { caffeinated = True }  
+--                            (state, "OK")
+--                            else (state, "You do not have the required items.")   
+--                   -- not sure if this will work, and the indentation may be off.
+-- drink _ state = (state, "Cannot drink this object.")
                
 {- Open the door. Only allowed if the player has had coffee! 
    This should change the description of the hall to say that the door is open,
@@ -291,17 +284,19 @@ drink _ state = (state, "Cannot drink this object.")
    'openedhall' and 'openedexits' from World.hs for this.
 -}
 
-open :: Action
-open Door state = if caffeinated state then
-                     if location_id state == "hall" then 
-                         do gd <- updateRoom "hall" (Room
-                                   openedhall 
-                                   openedexits 
-                                   [])
-                            (gd, "OK")
-                       else (state, "You are not in the correct room.")
-                       else (state, "You need to be caffeinated before you can go outside.")
-open _ state = (state, "Cannot drink this object.")
+open :: Action'
+open Door state | caffeinated state = (updateRoom state "hall" Room (openedhall openedexits []),"OK")
+                | otherwise         = (state, "You need to be caffeinated before you go outside.")
+-- open Door state = if caffeinated state then
+--                      if location_id state == "hall" then 
+--                          do gd <- updateRoom "hall" (Room
+--                                    openedhall 
+--                                    openedexits 
+--                                    [])
+--                             (gd, "OK")
+--                        else (state, "You are not in the correct room.")
+--                        else (state, "You need to be caffeinated before you can go outside.")
+-- open _ state = (state, "Cannot drink this object.")
 
 {- Don't update the game state, just list what the player is carrying -}
 
