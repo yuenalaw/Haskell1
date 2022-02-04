@@ -39,7 +39,7 @@ instance Show Room where
                                   
 
 instance Show GameData where
-    show gd = show (getRoomData gd)
+    show gd = show (getRoomData gd) ++ show (inventory gd)
 
 -- Things which do something to an object and update the game state
 type Action  = Object -> GameData -> (GameData, String)
@@ -86,7 +86,7 @@ gameworld = [("bedroom", bedroom),
              ("street", street)]
 
 initState :: GameData
-initState = GameData "bedroom" gameworld [] False False False
+initState = GameData "hall" gameworld [coffeepot, fullmug] False True False
 
 {- Return the room the player is currently in. -}
 

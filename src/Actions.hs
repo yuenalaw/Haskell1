@@ -5,15 +5,16 @@ import Parsing
 
 
 
-
+{-
 data Object' = Coffee | Door | Mug | Coffeepot | FullMug
    deriving Show 
+-}
 
 
 data Command = Go Direction | Get Object 
                | Pour Object
                | Examine Object | Drink Object
-               | Open Object 
+               | Open
    deriving Show 
 
 {-
@@ -43,7 +44,7 @@ validate "pour" "coffee" = Just (Pour coffeepot)
 validate "examine" "mug" = Just (Examine mug)
 validate "examine" "coffee" = Just (Examine fullmug)
 validate "drink" "coffee" = Just (Drink fullmug)
---validate "open" "door" = Just (Open Door)
+validate "open" "door" = Just (Open)
 validate _ _ = Nothing
 
 -- commandOther :: String -> Maybe Command 
@@ -57,7 +58,7 @@ performAction gd (Get obj)         = get obj gd
 performAction gd (Pour obj)        = pour obj gd
 performAction gd (Examine obj)     = examine obj gd
 performAction gd (Drink obj)       = drink obj gd
---performAction gd (Open obj)        = open obj gd
+performAction gd (Open)            = open mug gd -- mug isnt actually used here can change later
 
 -- parseObject :: String -> Maybe Object
 -- parseObject "mug"     = Just mug
@@ -94,8 +95,10 @@ move :: Direction -> Room -> Maybe String
    {- check each of the exits in the room and if one matches the direction given return that exit
       else returun Nothing
    -}
-move dir rm = if (res == []) then Nothing else Just $ exit_desc (head res) 
+move dir rm = if (res == []) then Nothing else Just (room (head res))
       where res = filter (\x -> dir == exit_dir x) (exits rm)
+--move dir rm = let exits = (exits rm)
+  --                in if()
 
 {- PARTIALLY COMPLETED!! (rather than taking a String, change it to take an Object)
 Return True if the object appears in the room. -}
@@ -164,7 +167,7 @@ addInv gd obj
 
 removeInv :: GameData -> Object -> GameData
 removeInv gd obj 
-   | carrying gd obj = gd {inventory = filter (\x -> x == obj) (inventory gd)}
+   | carrying gd obj = gd {inventory = filter (\x -> x /= obj) (inventory gd)}
    | otherwise = gd
 
 {- Does the inventory in the game state contain the given object? -}
@@ -206,10 +209,15 @@ go dir state = case move dir (getRoomData state) of
 
 
 get :: Action --have not used objectData??!!
+{-
 get obj state | objectHere obj (getRoomData state) = (updateRoom state (location_id state) (removeObject obj (getRoomData (addInv state obj))),"OK") 
               | otherwise                          = (state, "Item not in room")
+-}
 
-            
+get obj state | objectHere obj (getRoomData state) = let newState = addInv state obj
+                                                         in (updateRoom newState (location_id newState) (removeObject obj (getRoomData newState)),"OK")
+
+              | otherwise                          = (state, "Item not in room")             
 -- {- Remove an item from the player's inventory, and put it in the current room.
 --    Similar to 'get' but in reverse - find the object in the inventory, create
 --    a new room with the object in, update the game world with the new room.
@@ -219,7 +227,8 @@ get obj state | objectHere obj (getRoomData state) = (updateRoom state (location
 -- -- obtainObj gd obj = head (filter(\x -> obj_name x == obj) (inventory gd))
 
 put :: Action
-put obj state | carrying state obj = (updateRoom state (location_id state) (addObject obj (getRoomData (removeInv state obj))), "OK")
+put obj state | carrying state obj = let newState = removeInv state obj
+                                                         in (updateRoom newState (location_id newState) (addObject obj (getRoomData newState)),"OK")
               | otherwise          = (state, "Item not in inventory")
 
 
@@ -289,19 +298,11 @@ drink obj state | carrying state fullmug = (state {inventory= filter (/= fullmug
    'openedhall' and 'openedexits' from World.hs for this.
 -}
 
---open :: Action
---open door state | caffeinated state = (updateRoom state "hall" Room (openedhall openedexits []),"OK")
-                | otherwise         = (state, "You need to be caffeinated before you go outside.")
--- open Door state = if caffeinated state then
---                      if location_id state == "hall" then 
---                          do gd <- updateRoom "hall" (Room
---                                    openedhall 
---                                    openedexits 
---                                    [])
---                             (gd, "OK")
---                        else (state, "You are not in the correct room.")
---                        else (state, "You need to be caffeinated before you can go outside.")
--- open _ state = (state, "Cannot drink this object.")
+open :: Action
+open _ state | caffeinated state && getRoomData state == hall = (updateRoom state "hall" (Room openedhall openedexits []),"OK")
+             | otherwise         = (state, "You need to be caffeinated before you go outside.")
+
+         
 
 {- Don't update the game state, just list what the player is carrying -}
 
