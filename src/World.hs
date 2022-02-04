@@ -8,7 +8,7 @@ data Object = Obj { obj_name :: String,
 instance Show Object where
    show obj = obj_longname obj
 
-data Exit = Exit { exit_dir :: String,
+data Exit = Exit { exit_dir :: Direction,
                    exit_desc :: String,
                    room :: String }
    deriving Eq
@@ -44,6 +44,8 @@ instance Show GameData where
 -- Things which do something to an object and update the game state
 type Action  = Object -> GameData -> (GameData, String)
 
+data Direction = North | South | East | West | Out | In
+   deriving (Show, Eq)
 
 -- Things which just update the game state
 type Instruction = GameData -> (GameData, String)
@@ -56,26 +58,26 @@ coffeepot = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coff
 bedroom, kitchen, hall, street :: Room
 
 bedroom = Room "You are in your bedroom."
-               [Exit "north" "To the north is a kitchen. " "kitchen"]
+               [Exit North "To the north is a kitchen. " "kitchen"]
                [mug]
 
 kitchen = Room "You are in the kitchen."
-               [Exit "south" "To the south is your bedroom. " "bedroom",
-                Exit "west" "To the west is a hallway. " "hall"]
+               [Exit South "To the south is your bedroom. " "bedroom",
+                Exit West "To the west is a hallway. " "hall"]
                [coffeepot]
 
 hall = Room "You are in the hallway. The front door is closed. "
-            [Exit "east" "To the east is a kitchen. " "kitchen"]
+            [Exit East "To the east is a kitchen. " "kitchen"]
             []
 
 -- New data about the hall for when we open the door
 
 openedhall = "You are in the hallway. The front door is open. "
-openedexits = [Exit "east" "To the east is a kitchen. " "kitchen",
-               Exit "out" "You can go outside. " "street"]
+openedexits = [Exit East "To the east is a kitchen. " "kitchen",
+               Exit Out "You can go outside. " "street"]
 
 street = Room "You have made it out of the house."
-              [Exit "in" "You can go back inside if you like. " "hall"]
+              [Exit In "You can go back inside if you like. " "hall"]
               []
 
 gameworld = [("bedroom", bedroom),

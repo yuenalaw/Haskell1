@@ -4,8 +4,7 @@ import World
 import Parsing
 
 
-data Direction = North | South | East | West
-   deriving Show 
+
 
 data Object' = Coffee | Door | Mug | Coffeepot | FullMug
    deriving Show 
@@ -44,7 +43,7 @@ validate "pour" "coffee" = Just (Pour coffeepot)
 validate "examine" "mug" = Just (Examine mug)
 validate "examine" "coffee" = Just (Examine fullmug)
 validate "drink" "coffee" = Just (Drink fullmug)
-validate "open" "door" = Just (Open Door)
+--validate "open" "door" = Just (Open Door)
 validate _ _ = Nothing
 
 -- commandOther :: String -> Maybe Command 
@@ -58,7 +57,7 @@ performAction gd (Get obj)         = get obj gd
 performAction gd (Pour obj)        = pour obj gd
 performAction gd (Examine obj)     = examine obj gd
 performAction gd (Drink obj)       = drink obj gd
-performAction gd (Open obj)        = open obj gd
+--performAction gd (Open obj)        = open obj gd
 
 -- parseObject :: String -> Maybe Object
 -- parseObject "mug"     = Just mug
@@ -206,7 +205,7 @@ go dir state = case move dir (getRoomData state) of
 
 
 
-get :: Action' --have not used objectData??!!
+get :: Action --have not used objectData??!!
 get obj state | objectHere obj (getRoomData state) = (updateRoom state (location_id state) (removeObject obj (getRoomData (addInv state obj))),"OK") 
               | otherwise                          = (state, "Item not in room")
 
@@ -239,12 +238,17 @@ examine obj state | carrying state obj                 = (state, obj_desc obj)
    object in the player's inventory to be a new object, a "full mug".
 -}
 
-<<<<<<< HEAD
-pour :: Action'
-{-an idea?? create makeFullMug function-}
-pour obj state | carrying state Coffeepot && carrying state Mug = (state {inventory=(filter (/= FullMug) (inventory state)) ++ Mug},"OK")
-               | otherwise                          = (state,"Cannot pour object")
 
+pour :: Action
+{-an idea?? create makeFullMug function-}
+pour obj state | carrying state mug && carrying state coffeepot = (state {inventory= filter (/= mug) (inventory state) ++ [fullmug]},"OK")
+               | otherwise                          = (state,"Cannot pour object")
+{-}
+pour :: Action
+{-an idea?? create makeFullMug function-}
+pour obj state | carrying state mug && carrying state coffeepot = (state {inventory= filter (/= mug) (inventory state) ++ [fullmug]},"OK")
+               | otherwise                          = (state,"Cannot pour object")
+-}
 -- pour Coffee state = if carrying mug then 
 --                         if carrying coffeepot then 
 --                            do state <- addInv state fullmug 
@@ -254,7 +258,7 @@ pour obj state | carrying state Coffeepot && carrying state Mug = (state {invent
 --                           else (state, "You do not have the required items.")
 --                   -- not sure if this will work, and the indentation may be off.
 -- pour _ state = (state, "Cannot pour this object.")
-=======
+
                
 
 {- Drink the coffee. This should only work if the player has a full coffee 
@@ -264,9 +268,8 @@ pour obj state | carrying state Coffeepot && carrying state Mug = (state {invent
    Also, put the empty coffee mug back in the inventory!
 -}
 
-<<<<<<< HEAD
-drink :: Action'
-drink obj state | carrying state FullMug = (state {inventory=(filter (/= Mug) (inventory state)) ++ FullMug,caffeinated=True},"OK")
+drink :: Action
+drink obj state | carrying state fullmug = (state {inventory= filter (/= fullmug) (inventory state) ++ [mug], caffeinated=True}, "OK")
                 | otherwise              = (state,"Cannot drink this object")
 
 -- drink Coffee state = if carrying fullmug  then 
@@ -277,17 +280,6 @@ drink obj state | carrying state FullMug = (state {inventory=(filter (/= Mug) (i
 --                            else (state, "You do not have the required items.")   
 --                   -- not sure if this will work, and the indentation may be off.
 -- drink _ state = (state, "Cannot drink this object.")
-=======
-drink :: Action
-drink coffeepot state = if carrying fullmug  then 
-                        do state <- addInv state mug 
-                           state <- removeInv state fullmug
-                           state { caffeinated = True }  
-                           (state, "OK")
-                           else (state, "You do not have the required items.")   
-                  -- not sure if this will work, and the indentation may be off.
-drink _ state = (state, "Cannot drink this object.")
->>>>>>> 06572f0ac1a8712477059eb0fc4610493be25272
                
 {- Open the door. Only allowed if the player has had coffee! 
    This should change the description of the hall to say that the door is open,
@@ -297,9 +289,8 @@ drink _ state = (state, "Cannot drink this object.")
    'openedhall' and 'openedexits' from World.hs for this.
 -}
 
-<<<<<<< HEAD
-open :: Action'
-open Door state | caffeinated state = (updateRoom state "hall" Room (openedhall openedexits []),"OK")
+--open :: Action
+--open door state | caffeinated state = (updateRoom state "hall" Room (openedhall openedexits []),"OK")
                 | otherwise         = (state, "You need to be caffeinated before you go outside.")
 -- open Door state = if caffeinated state then
 --                      if location_id state == "hall" then 
@@ -311,19 +302,6 @@ open Door state | caffeinated state = (updateRoom state "hall" Room (openedhall 
 --                        else (state, "You are not in the correct room.")
 --                        else (state, "You need to be caffeinated before you can go outside.")
 -- open _ state = (state, "Cannot drink this object.")
-=======
-open :: Action
-open door state = if caffeinated state then
-                     if location_id state == "hall" then 
-                         do gd <- updateRoom "hall" (Room
-                                   openedhall 
-                                   openedexits 
-                                   [])
-                            (gd, "OK")
-                       else (state, "You are not in the correct room.")
-                       else (state, "You need to be caffeinated before you can go outside.")
-open _ state = (state, "Cannot drink this object.")
->>>>>>> 06572f0ac1a8712477059eb0fc4610493be25272
 
 {- Don't update the game state, just list what the player is carrying -}
 
