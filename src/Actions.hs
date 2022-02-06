@@ -14,7 +14,7 @@ data Object' = Coffee | Door | Mug | Coffeepot | FullMug
 data Command = Go Direction | Get Object 
                | Pour Object
                | Examine Object | Drink Object
-               | Open
+               | Open | Wear Object
    deriving Show 
 
 {-
@@ -45,6 +45,7 @@ validate "examine" "mug" = Just (Examine mug)
 validate "examine" "coffee" = Just (Examine fullmug)
 validate "drink" "coffee" = Just (Drink fullmug)
 validate "open" "door" = Just (Open)
+validate "wear" "mask" = Just (Wear facemask)
 validate _ _ = Nothing
 
 -- commandOther :: String -> Maybe Command 
@@ -59,6 +60,7 @@ performAction gd (Pour obj)        = pour obj gd
 performAction gd (Examine obj)     = examine obj gd
 performAction gd (Drink obj)       = drink obj gd
 performAction gd (Open)            = open mug gd -- mug isnt actually used here can change later
+performAction gd (Wear obj)        = wear facemask gd
 
 -- parseObject :: String -> Maybe Object
 -- parseObject "mug"     = Just mug
@@ -279,7 +281,7 @@ pour obj state | carrying state mug && carrying state coffeepot = (state {invent
 
 drink :: Action
 drink obj state | carrying state fullmug = (state {inventory= filter (/= fullmug) (inventory state) ++ [mug], caffeinated=True}, "OK")
-                | otherwise              = (state,"Cannot drink this object")
+                | otherwise              = (state,"You are not carrying a full coffe mug")
 
 -- drink Coffee state = if carrying fullmug  then 
 --                         do state <- addInv state mug 
@@ -297,6 +299,10 @@ drink obj state | carrying state fullmug = (state {inventory= filter (/= fullmug
    Use 'updateRoom' once you have made a new description. You can use 
    'openedhall' and 'openedexits' from World.hs for this.
 -}
+wear :: Action
+wear obj state | carrying state facemask = (state {inventory= filter (/= facemask) (inventory state), maskOn=True}, "OK")
+                | otherwise              = (state,"You need to be carrying a mask to wear it.")
+
 
 open :: Action
 open _ state | caffeinated state && getRoomData state == hall = (updateRoom state "hall" (Room openedhall openedexits []),"OK")
