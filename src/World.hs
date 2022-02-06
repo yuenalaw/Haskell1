@@ -24,6 +24,7 @@ data GameData = GameData { location_id :: String, -- where player is
                            poured :: Bool, -- coffee is poured
                            caffeinated :: Bool, -- coffee is drunk
                            maskOn :: Bool, -- facemask is on
+                           handsWashed :: Bool, -- hands have been washed
                            finished :: Bool -- set to True at the end
                          }
 
@@ -40,7 +41,7 @@ instance Show Room where
                                   
 
 instance Show GameData where
-    show gd = show (getRoomData gd) ++ show (inventory gd)
+    show gd = show (getRoomData gd)
 
 -- Things which do something to an object and update the game state
 type Action  = Object -> GameData -> (GameData, String)
@@ -51,20 +52,20 @@ data Direction = North | South | East | West | Out | In
 -- Things which just update the game state
 type Instruction = GameData -> (GameData, String)
 
-mug, fullmug, coffeepot :: Object
+mug, fullmug, coffeepot, soap, mask :: Object
 mug       = Obj "mug" "a coffee mug" "A coffee mug"
 fullmug   = Obj "mug" "a full coffee mug" "A coffee mug containing freshly brewed coffee"
 coffeepot = Obj "coffee" "a pot of coffee" "A pot containing freshly brewed coffee"
 soap      = Obj "soap" "a bar of soap" "A lemon flavoured soap"
-facemask      = Obj "mask" "a facemask" "A covid-safe chewbacca face mask"
+mask      = Obj "mask" "a mask" "A covid-safe chewbacca face mask"
 
 
-bedroom, kitchen, hall, street :: Room
+bedroom, kitchen, hall, lounge, bathroom, street :: Room
 
 bedroom = Room "You are in your bedroom."
                [Exit North "To the north is a kitchen. " "kitchen",
-                Exit East "To the north is a bathroom. " "bathroom"]
-               [mug, facemask]
+                Exit East "To the east is a bathroom. " "bathroom"]
+               [mug, mask]
 
 kitchen = Room "You are in the kitchen."
                [Exit South "To the south is your bedroom. " "bedroom",
@@ -103,7 +104,7 @@ gameworld = [("bedroom", bedroom),
              ("street", street)]
 
 initState :: GameData
-initState = GameData "bedroom" gameworld [] False False False False
+initState = GameData "bedroom" gameworld [] False False False False False
 
 {- Return the room the player is currently in. -}
 

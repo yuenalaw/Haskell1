@@ -14,7 +14,7 @@ data Object' = Coffee | Door | Mug | Coffeepot | FullMug
 data Command = Go Direction | Get Object 
                | Pour Object
                | Examine Object | Drink Object
-               | Open | Wear Object
+               | Open | Wear Object | Wash Object
    deriving Show 
 
 {-
@@ -36,16 +36,25 @@ validate "go" "north" = Just (Go North)
 validate "go" "south" = Just (Go South)
 validate "go" "east" = Just (Go East)
 validate "go" "west" = Just (Go West)
+validate "go" "out" = Just (Go Out)
+validate "go" "in" = Just (Go In)
 validate "get" "mug" = Just (Get mug)
+validate "get" "mask" = Just (Get mask)
+validate "get" "pot" = Just (Get coffeepot)
+validate "get" "soap" = Just (Get soap)
 --validate "get" "coffee" = Just (Get coffee)
 --validate "drop" "mug" = Just (Drop mug)
 --validate "drop" "coffee" = Just (Drop Coffee)
 validate "pour" "coffee" = Just (Pour coffeepot)
 validate "examine" "mug" = Just (Examine mug)
 validate "examine" "coffee" = Just (Examine fullmug)
+validate "examine" "coffeepot" = Just (Examine coffeepot)
+validate "examine" "soap" = Just (Examine soap)
+validate "examine" "mask" = Just (Examine mask)
 validate "drink" "coffee" = Just (Drink fullmug)
 validate "open" "door" = Just (Open)
-validate "wear" "mask" = Just (Wear facemask)
+validate "wear" "mask" = Just (Wear mask)
+validate "wash" "hands" = Just (Wash soap)
 validate _ _ = Nothing
 
 -- commandOther :: String -> Maybe Command 
@@ -60,7 +69,8 @@ performAction gd (Pour obj)        = pour obj gd
 performAction gd (Examine obj)     = examine obj gd
 performAction gd (Drink obj)       = drink obj gd
 performAction gd (Open)            = open mug gd -- mug isnt actually used here can change later
-performAction gd (Wear obj)        = wear facemask gd
+performAction gd (Wear obj)        = wear obj gd
+performAction gd (Wash obj)        = wash obj gd
 
 -- parseObject :: String -> Maybe Object
 -- parseObject "mug"     = Just mug
@@ -194,7 +204,7 @@ e.g.
 go :: Direction -> GameData -> (GameData, String)
 go dir state = case move dir (getRoomData state) of
    Just ans -> (state {location_id=ans},"OK")
-   Nothing -> (state,"Unable to move!")
+   Nothing -> (state,"You are unable to move this way.")
 
 {- Remove an item from the current room, and put it in the player's inventory.
    This should only work if the object is in the current room. Use 'objectHere'
@@ -300,13 +310,17 @@ drink obj state | carrying state fullmug = (state {inventory= filter (/= fullmug
    'openedhall' and 'openedexits' from World.hs for this.
 -}
 wear :: Action
-wear obj state | carrying state facemask = (state {inventory= filter (/= facemask) (inventory state), maskOn=True}, "OK")
-                | otherwise              = (state,"You need to be carrying a mask to wear it.")
+wear obj state | carrying state mask = (state {inventory= filter (/= mask) (inventory state), maskOn=True}, "OK, you are now wearing your stylish facemask")
+               | otherwise              = (state,"You need to be carrying a mask to wear it.")
+
+wash :: Action
+wash obj state | carrying state soap = (state {handsWashed = True}, "OK, your hands are now clean.")
+               | otherwise              = (state,"You need to wash your hands with soap.")
 
 
 open :: Action
-open _ state | caffeinated state && getRoomData state == hall = (updateRoom state "hall" (Room openedhall openedexits []),"OK")
-             | otherwise         = (state, "You need to be caffeinated before you go outside.")
+open _ state | caffeinated state && getRoomData state == hall && maskOn state && handsWashed state = (updateRoom state "hall" (Room openedhall openedexits []),"OK")
+             | otherwise         = (state, "You need to be caffeinated and fully covid safe before you go outside.")
 
          
 
